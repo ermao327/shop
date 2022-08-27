@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/js/axios.js"></script>
+    <script src="/js/vue.js"></script>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/bootstrap.js"></script>
+    <script src="/js/bootstrap-mypaginator.js"></script>
+    <script src="/js/bootstrap-paginator.js"></script>
+    <script src="/js/template-web.js"></script>
+    <!--用于弹出框的样式  -->
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css"/>
+</head>
+<body>
+
+<div id="d">
+    <h1>我的购物车</h1>
+
+    <table border="1">
+        <thead>
+        <tr>
+            <th>序号</th>
+            <th>商品名称</th>
+            <th>商品数量</th>
+            <th>商品总价</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="tb">
+        <!-- 此处为购物车展示区域 -->
+        <tr v-for='(p,i) in pageInfo.list'>
+            <td>{{i}}</td>
+            <td>{{p.productName}}</td>
+            <td>{{p.num}}</td>
+            <td>{{p.price}}</td>
+            <td>
+                <a href="javaScript:;" @click="showModify(p)">修改</a>
+                <a href="javaScript:;" @click="deleteItem(p.productId)">删除</a>
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+    <hr>
+    <br>
+
+    <a href="javaScript:;" @click="removeAll()">清空购物车</a>
+    <a href="/html/list.html">继续购物</a>
+    <a href="/html/order.html">结算</a>
+
+    <div class="modal fade" tabindex="-1" id="showItem">
+        <!-- 修改商品个数的窗口声明 -->
+        <div class="modal-dialog modal-lg">
+            <!-- 内容声明 -->
+            <div class="modal-content">
+                <!-- 头部、主体、脚注 -->
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">修改Item</h4>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="row text-right" id="course-id-input" style="display: none;">
+                        <label for="modify-product-id" class="col-xs-4 control-label">商品id：</label>
+                        <div class="col-xs-4">
+                            <input class="form-control" v-model="productId" id="modify-product-id" readonly/>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row text-right">
+                        <label for="modify-product-name" class="col-xs-4 control-label">商品名称：</label>
+                        <div class="col-xs-4">
+                            <input class="form-control" id="modify-product-name" v-model="productName" readonly/>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row text-right">
+                        <label for="modify-product-num" class="col-xs-4 control-label">商品数量：</label>
+                        <div class="col-xs-4">
+                            <input class="form-control" id="modify-product-num" v-model="num"/>
+                        </div>
+                    </div>
+                    <div class="row text-right">
+                        <label for="modify-product-price" class="col-xs-4 control-label">商品单价：</label>
+                        <div class="col-xs-4">
+                            <input class="form-control" id="modify-product-price" v-model="singlePrice" readonly/>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row text-right">
+                        <label class="col-xs-4 control-label">封面图片：</label>
+                        <div class="col-xs-4">
+                            <a href="javascript:imageUpload('#cover-image');" class="file">选择文件</a>
+                            <input type="file" name="cover_image" style="display: none;" onchange="imageChange(this)"
+                                   id="cover-image"/>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmBt" @click="modifyItem()" class="btn btn-primary curse-btn"
+                            data-dismiss="modal">确定
+                    </button>
+                    <button class="btn btn-primary cancel" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ul id="myPages"></ul>
+
+</div>
+<script>
+    var v = new Vue({
+        el:'#d',
+        data:{
+            username:'',
+            pageInfo:'',
+            productId:'',
+            productName:'',
+            num:'',
+            singlePrice:'',
+            currentPage:''
+        },
+        methods:{
+            ajaxLoadData(pageNo) {
+                var p=new URLSearchParams();
+                p.append('pageNo',pageNo);
+                axios.post('/product/findCart',p).then(rs=>{
+                    this.pageInfo = rs.data.obj;
+                    if (pageNo == 1) {
+                        myoptions.onPageClicked = (event, originalEvent, type, page)=>{
+                            this.ajaxLoadData(page);
+                        };
+                        var totalPages = this.pageInfo;
+                        /* 在ul标签中显示分页项 */
+                        myPaginatorFun("myPages", 1, totalPages);
+                    }
+                    this.currentPage = pageNo;
+                })
+
+            },
+            showModify(p) {
+                this.productId = p.productId;
+                this.productName = p.productName;
+                this.num = p.num;
+                this.singlePrice = p.price/p.num;
+                $("#showItem").modal("show");
+            },
+            modifyItem() {
+                var p=new URLSearchParams();
+                p.append('productId',this.productId);
+                p.append('num',this.num);
+                p.append('price',this.singlePrice);
+                axios.post(
+                    '/product/modifyCart',
+                    p).then(rs=>{
+                    this.ajaxLoadData(this.currentPage)
+                })
+            },
+
+            deleteItem(productId) {
+                //必须用==号，因为返回的是字符串
+                if (!(confirm("删除？") == true)) {
+                    return;
+                }
+                //删除
+                var p=new URLSearchParams();
+                p.append('productId',productId);
+                axios.post('/product/deleteCart', p).then(rs=>{
+                    this.ajaxLoadData(this.currentPage)
+                })
+            },
+
+            removeAll() {
+                //必须用==号，因为返回的是字符串
+                if (!(confirm("删除？") == true)) {
+                    return;
+                }
+                //删除
+                axios.post('/product/deleteAllCart').then(rs=>{
+                    this.ajaxLoadData(this.currentPage)
+                })
+            }
+        },
+        mounted(){
+            this.ajaxLoadData(1)
+        }
+    })
+</script>
+
+</body>
+
+</html>

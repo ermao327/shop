@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hy.dao.ProductDao">
+	<select id="selectAll" resultType="Product">
+		select id,name,price from t_product
+  </select>  
+  
+  <select id="selectById" resultType="Product">
+		select id,name,price from t_product where id=#{id}
+  </select> 
+  
+  <resultMap type="Cart" id="cm">
+  		<id property="id" column="cartid"/>
+  		<result property="userId" column="user_id"/>	
+  		<result property="productId" column="product_id"/>
+  		<result property="num" column="num"/>
+  		<result property="productName" column="name"/>
+  		<result property="price" column="price"/>
+  	</resultMap>
+  <select id="selectItemFromCartByUserIdAndProductId" resultMap="cm">
+		select t_cart.id cartid,user_id,product_id,num,price 
+		from t_cart 
+		where user_id=#{userid} and product_id=#{productid}
+  </select> 
+  
+  <update id="updateCart">
+  	update t_cart set num=#{num},price=#{price} where user_id=#{userId} and product_id=#{productId}
+  </update>
+  <insert id="insertIntoCart">
+  	insert into t_cart (user_id,product_id,num,price)values(#{userId},#{productId},#{num},#{price})
+  </insert>
+  
+  <insert id="insertIntoItem">
+  	insert into t_item (product_id,num,price,order_id)values(#{productId},#{num},#{price},#{orderId})
+  </insert>
+  <select id="selectCartByUserId" resultMap="cm">
+	select t_cart.id cartid,user_id,product_id,num,name,t_cart.price price 
+	from t_cart,t_product 
+	where product_id=t_product.id and user_id=#{userid} 
+  </select> 
+  
+  
+  <delete id="deleteCart">
+  	delete from t_cart 
+  	<where> 
+  	<if test="userId!=null">
+		and user_id = #{userId}
+	</if>
+	<if test="productId!=null">
+		and product_id = #{productId}
+	</if>
+  	</where>
+  </delete>
+  
+  <insert id="insertOrder" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+  	insert into t_order (no,price,user_id)values(#{no},#{price},#{userId})
+  </insert>	
+</mapper>

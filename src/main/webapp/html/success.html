@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/js/jquery.js"></script>
+    <script src="/js/axios.js"></script>
+    <script src="/js/vue.js"></script>
+</head>
+
+
+<body>
+
+
+
+  <div id="d">
+      <<h1>生成订单</h1>
+      <hr>
+      <h1>订单生成成功，订单号：{{orderNo}}</h1>
+      <a href="/html/list.html">继续购物</a>
+  </div>
+  <script>
+      var v = new Vue({
+          el:'#d',
+          data:{
+              orderNo:''
+          },
+          methods:{
+              getOrder(){
+                  axios.get('/product/getOrder').then(rs=>{
+                      if(rs.data.success){
+                          this.orderNo = rs.data.obj;
+                      }
+                  })
+              }
+          },
+          mounted(){
+              this.getOrder()
+          }
+      })
+  </script>
+
+</body>
+	
+</body>
+</html>

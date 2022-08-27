@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/context
+       https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--会在多个classpath下找资源-->
+    <context:property-placeholder location="classpath*:datasource.properties"/>
+    <!--事务-->
+    <bean id="ds" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <bean id="tm" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="ds"/>
+    </bean>
+    <tx:annotation-driven  transaction-manager="tm"/>
+
+
+    <bean id="cfg" class="org.apache.ibatis.session.Configuration">
+        <property name="logImpl" value="org.apache.ibatis.logging.stdout.StdOutImpl"/>
+    </bean>
+    <bean id="sf" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configuration" ref="cfg"/>
+        <property name="dataSource" ref="ds"/>
+        <!--注册mapper文件,可一项项的写，如果很多个，可用通配符-->
+        <property name="mapperLocations"  value="classpath:mapper/*Mapper.xml"/>
+        <!-- 指定包的别名-->
+        <property name="typeAliasesPackage" value="hy.entity"/>
+        <!-- 分页插件pagehelper -->
+        <property name="plugins">
+            <list>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <value><!--reasonable:true分页参数合理化,页码小于1和大于总页数就分别加载1和最大页,默认false-->
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--指定为上面的sqlSessionFactory对象,注意这里value为string类型  -->
+        <property name="sqlSessionFactoryBeanName" value="sf"/>
+        <!--指定要产生哪些dao,指定包名，会自动扫描包，并实现该包下所有的接口  -->
+        <property name="basePackage" value="hy.dao"/>
+    </bean>
+</beans>

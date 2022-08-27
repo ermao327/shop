@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="/js/jquery.js"></script>
+	<script src="/js/axios.js"></script>
+	<script src="/js/vue.js"></script>
+	<style>
+		div{
+			margin: 0 auto;
+			text-align: left;
+		}
+	</style>
+</head>
+  <body>
+  <div id="d">
+	  <div style=" width:200px;">
+		  <h1>用户登录</h1>
+		  <a href="/regist.html">返回注册</a><br>
+		  <a href="/list.html">返回商品列表</a>
+	  </div>
+	  <hr>
+	  <div style="background-color:#0aa; width:400px;">
+		  <input v-model="username"  placeholder="用户名"><br>
+		  <input type="password" v-model="password" placeholder="密码"><br>
+		  <input placeholder="验证码" v-model="randomCode">
+		  <a href="javascript:;">
+			  <img id="img" alt="加载中..." :src="code" @click="codeRefresh()">
+		  </a><br>
+		  <div >
+			  <button type="button" @click ="login">登&nbsp;&nbsp;录</button>
+		  </div>
+	  </div>
+	  <span style="color:red" >{{errMsg}}</span>
+  </div>
+  <script>
+	  var v = new Vue({
+		  el:'#d',
+		  data:{
+		      code:'',
+			  username:'a1',
+			  password:'123',
+              randomCode:'',
+			  errMsg:''
+		  },
+		  methods:{
+              codeRefresh(){
+                  this.code="/user/getCode?rt="+Math.random();
+			  },
+              login(){
+				  if(this.username == ""){
+					  $("#errMsg").text("用户名不能为空");
+					  return false;
+				  }
+
+				  if(this.password == ""){
+					  $("#errMsg").text("密码不能为空");
+					  return false;
+				  }
+
+				  if(this.randomCode == ""){
+					  $("#errMsg").text("验证码不能为空");
+					  //return false;
+				  }
+                  var p=new URLSearchParams();
+                  p.append('username',this.username);
+                  p.append('password',this.password);
+                  p.append('code',this.randomCode);
+				  axios.post('/user/login',p).then(rs=>{
+					if(rs.data.success){
+                        location.href="/html/list.html"
+					}else {
+					    this.errMsg = rs.data.msg;
+					}
+				  })
+			  }
+		  },
+		  mounted(){
+			this.codeRefresh();
+		  }
+
+	  })
+  </script>
+  </body>
+
+</html>		

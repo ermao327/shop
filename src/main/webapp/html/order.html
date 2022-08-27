@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<script src="/js/jquery.js"></script>
+	<script src="/js/axios.js"></script>
+	<script src="/js/vue.js"></script>
+	<script src="/js/bootstrap.js"></script>
+	<script src="/js/bootstrap-mypaginator.js"></script>
+	<script src="/js/bootstrap-paginator.js"></script>
+	<script src="/js/template-web.js"></script>
+	<!--用于弹出框的样式  -->
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css" />
+</head>
+	<body>
+
+		<div id="d">
+			<h1>确认订单</h1>
+			<hr>
+			用户：{{username}}
+			电话：{{phone}}
+			地址：{{address}}<br>
+			<hr>
+				合计：<input readonly v-model="sumPrice" name="sumPrice">元<br>
+				<input type="submit" value="提交" @click="createOrder">
+			<a href="/html/list.html">继续购物</a>
+		</div>
+		<script>
+			var v = new Vue({
+				el:'#d',
+				data:{
+				    username:'',
+					phone:'',
+					address:'',
+					sumPrice:''
+				},
+				methods:{
+				    createOrder(){
+                        var p=new URLSearchParams();
+                        p.append('sumPrice',this.sumPrice);
+                        axios.post('/product/createOrder',p).then(rs=>{
+                            if(rs.data.success){
+                                location.href='/html/success.html'
+							}
+                        })
+					},
+                    ifLogin(){
+                        axios.get('/user/isLogin').then(rs=>{
+                            var data = rs.data
+                            if(data.success){
+                                this.username = data.obj.username;
+                                this.phone = data.obj.phone;
+                                this.address = data.obj.address;
+                            }
+                        })
+                    },
+                    ajaxLoadData() {
+                        axios.post('/product/total').then(rs=>{
+							this.sumPrice = rs.data.obj;
+						})
+            		}
+				},
+				mounted(){
+				    this.ifLogin()
+                    this.ajaxLoadData()
+				}
+			})
+		</script>
+	 </body>
+</html>
